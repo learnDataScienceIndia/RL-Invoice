@@ -218,8 +218,13 @@
     }
     .row-cnt{font-size:11px;color:var(--muted);}
 
-    /* ═══════════════ PAYMENT DETAILS ═══════════════ */
-    .pay-section{padding:12px 20px 4px;}
+    /* ═══════════════ BOTTOM SECTION (PAYMENT + SIGNATURE) ═══════════════ */
+    .bottom-section{
+      display:flex; justify-content:space-between; align-items:flex-end;
+      padding:16px 20px 24px;
+      gap:20px;
+    }
+    .pay-section{}
     .pay-head{
       font-size:11px;font-weight:800;letter-spacing:1.5px;
       text-transform:uppercase;color:var(--text);
@@ -238,17 +243,6 @@
 
     /* ═══════════════ FOOTER ═══════════════ */
     .po-footer{position:relative;overflow:hidden;}
-    .fc1{position:absolute;bottom:-55px;right:-55px;width:170px;height:150px;
-         background:var(--blue);border-radius:50%;opacity:.15;z-index:0;}
-    .fc2{position:absolute;bottom:-20px;right:20px;width:110px;height:85px;
-         background:var(--green);border-radius:50%;opacity:.11;z-index:0;}
-
-    .foot-inner{
-      position:relative;z-index:1;
-      display:grid;grid-template-columns:55% 45%;
-      border-top:3px solid var(--blue);
-      padding:14px 20px 12px;gap:12px;
-    }
 
     /* Signature col */
     .sig-lbl{font-size:9.5px;font-weight:700;text-transform:uppercase;
@@ -260,20 +254,8 @@
     .sig-line{border-bottom:1.5px solid var(--green);margin-top:2px;width:170px;}
     .sig-line-lbl{font-size:8.5px;color:var(--muted);margin-top:3px;
                   text-transform:uppercase;letter-spacing:.5px;}
-    .stamp-img{width:82px;height:82px;object-fit:contain;display:block;
-               flex-shrink:0;margin-bottom:0;}
-
-    /* Contact col */
-    .cont-col{display:flex;flex-direction:column;justify-content:center;gap:7px;}
-    .cont-row{display:flex;align-items:center;gap:7px;font-size:11.5px;color:var(--text);}
-    .ci{width:22px;height:22px;border-radius:50%;display:flex;align-items:center;
-        justify-content:center;flex-shrink:0;}
-    .ci.g{background:var(--green-lt);}
-    .ci.b{background:var(--blue-lt);}
-    .ci svg{width:12px;height:12px;}
-    .ci.g svg{fill:var(--green);}
-    .ci.b svg{fill:var(--blue-dk);}
-    .cont-row span{font-size:11.5px;}
+    .stamp-img{width:90px;height:90px;object-fit:contain;display:block;
+               flex-shrink:0;margin-bottom:-5px;margin-left:-60px;position:relative;z-index:2;}
 
     /* Bottom strip */
     .foot-strip{
@@ -321,7 +303,7 @@
       .item-tbl thead th{padding:5px 6px !important;}
       .item-tbl tbody td{padding:2px 4px !important;}
       .gt-tr td{padding:7px 10px !important;}
-      .foot-inner{padding:9px 13px !important;}
+      .bottom-section{padding:9px 13px 12px !important;}
       [contenteditable]{border-bottom:none !important;background:transparent !important;}
       .item-tbl tbody td input{background:transparent !important;}
       .pay-tbl td input{background:transparent !important;}
@@ -460,78 +442,53 @@
     <span class="row-cnt" id="rowCnt"></span>
   </div>
 
-  <!-- ══ PAYMENT DETAILS ══ -->
-  <div class="pay-section">
-    <div class="pay-head">Payment Details:</div>
-    <table class="pay-tbl">
-      <tr>
-        <td class="plbl">Payment terms</td>
-        <td><input type="text" id="payTerms" value="Cash / Bank Transfer"/></td>
-      </tr>
-      <tr>
-        <td class="plbl">Bank Name</td>
-        <td><input type="text" id="bankName" value="ADCB"/></td>
-      </tr>
-      <tr>
-        <td class="plbl">Account Name</td>
-        <td><input type="text" id="accName" value="Reloop Recycling FZE"/></td>
-      </tr>
-      <tr>
-        <td class="plbl">Account Number</td>
-        <td><input type="text" id="accNum" value="14328262920001"/></td>
-      </tr>
-      <tr>
-        <td class="plbl">IBAN</td>
-        <td><input type="text" id="ibanNum" value="AE06 0030 0143 2826 2920 001"/></td>
-      </tr>
-    </table>
+  <!-- ══ BOTTOM SECTION (PAYMENT + SIGNATURE) ══ -->
+  <div class="bottom-section">
+    <!-- Payment Details -->
+    <div class="pay-section">
+      <div class="pay-head">Payment Details:</div>
+      <table class="pay-tbl">
+        <tr>
+          <td class="plbl">Payment terms</td>
+          <td><input type="text" id="payTerms" value="Cash / Bank Transfer"/></td>
+        </tr>
+        <tr>
+          <td class="plbl">Bank Name</td>
+          <td><input type="text" id="bankName" value="ADCB"/></td>
+        </tr>
+        <tr>
+          <td class="plbl">Account Name</td>
+          <td><input type="text" id="accName" value="Reloop Recycling FZE"/></td>
+        </tr>
+        <tr>
+          <td class="plbl">Account Number</td>
+          <td><input type="text" id="accNum" value="14328262920001"/></td>
+        </tr>
+        <tr>
+          <td class="plbl">IBAN</td>
+          <td><input type="text" id="ibanNum" value="AE06 0030 0143 2826 2920 001"/></td>
+        </tr>
+      </table>
+    </div>
+
+    <!-- Signature + Stamp (side by side) -->
+    <div class="sig-col">
+      <p class="sig-lbl" style="text-align: left;">Authorised Signatory &amp; Stamp</p>
+      <div class="sig-row">
+        <!-- Signature block -->
+        <div class="sig-area">
+          <img src="sign.png" alt="Signature" class="sig-img"/>
+          <div class="sig-line"></div>
+          <div class="sig-line-lbl" contenteditable="true">Authorised Signatory</div>
+        </div>
+        <!-- Stamp directly beside signature -->
+        <img src="seal.png" alt="Company Seal" class="stamp-img"/>
+      </div>
+    </div>
   </div>
 
   <!-- ══ FOOTER ══ -->
   <footer class="po-footer">
-    <div class="fc1"></div>
-    <div class="fc2"></div>
-
-    <div class="foot-inner">
-
-      <!-- Signature + Stamp (side by side) -->
-      <div class="sig-col">
-        <p class="sig-lbl">Authorised Signatory &amp; Stamp</p>
-        <div class="sig-row">
-          <!-- Signature block -->
-          <div class="sig-area">
-            <img src="sign.png" alt="Signature" class="sig-img"/>
-            <div class="sig-line"></div>
-            <div class="sig-line-lbl" contenteditable="true">Authorised Signatory</div>
-          </div>
-          <!-- Stamp directly beside signature -->
-          <img src="seal.png" alt="Company Seal" class="stamp-img"/>
-        </div>
-      </div>
-
-      <!-- Contact info -->
-      <div class="cont-col">
-        <div class="cont-row">
-          <span class="ci g">
-            <svg viewBox="0 0 24 24"><path d="M6.62 10.79A15.05 15.05 0 0013.2 17.37l2.2-2.2c.27-.27.67-.36 1.02-.24 1.12.37 2.33.57 3.57.57.55 0 1 .45 1 1V20c0 .55-.45 1-1 1C10.61 21 3 13.39 3 4c0-.55.45-1 1-1h3.5c.55 0 1 .45 1 1 0 1.25.2 2.46.57 3.57.11.35.03.74-.24 1.01l-2.21 2.21z"/></svg>
-          </span>
-          <span contenteditable="true" id="f-phone">+971 502107518</span>
-        </div>
-        <div class="cont-row">
-          <span class="ci b">
-            <svg viewBox="0 0 24 24"><path d="M20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4-8 5-8-5V6l8 5 8-5v2z"/></svg>
-          </span>
-          <span contenteditable="true" id="f-email">info@reloopglobal.com</span>
-        </div>
-        <div class="cont-row">
-          <span class="ci b">
-            <svg viewBox="0 0 24 24"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg>
-          </span>
-          <span contenteditable="true" id="f-addr">RA08 TC05, JAFZA, Dubai, UAE</span>
-        </div>
-      </div>
-    </div>
-
     <!-- Bottom strip -->
     <div class="foot-strip">
       <span>📞 +971 502107518</span>
