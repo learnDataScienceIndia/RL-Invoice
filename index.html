@@ -210,6 +210,12 @@
     .gt-lbl{font-size:13px;font-weight:800;color:#fff;text-align:right !important;letter-spacing:.5px;}
     .gt-val{font-size:17px;font-weight:800;color:#fff;text-align:center !important;white-space:nowrap;min-width:120px;}
 
+    /* Subtotal & VAT */
+    .st-tr{background:var(--grey) !important;}
+    .st-tr td{padding:7px 12px !important;border:1px solid var(--border) !important;}
+    .st-lbl{font-size:12px;font-weight:700;color:var(--text);text-align:right !important;letter-spacing:.5px;}
+    .st-val{font-size:14px;font-weight:700;color:var(--text);text-align:center !important;white-space:nowrap;min-width:120px;}
+
     /* ═══════════════ ROW CONTROLS ═══════════════ */
     .row-ctrl{
       display:flex;align-items:center;gap:10px;
@@ -302,6 +308,7 @@
       .sh-tbl td{padding:4px 8px !important;}
       .item-tbl thead th{padding:5px 6px !important;}
       .item-tbl tbody td{padding:2px 4px !important;}
+      .st-tr td{padding:4px 8px !important;}
       .gt-tr td{padding:7px 10px !important;}
       .bottom-section{padding:9px 13px 12px !important;}
       [contenteditable]{border-bottom:none !important;background:transparent !important;}
@@ -426,9 +433,19 @@
       </thead>
       <tbody id="tbody"></tbody>
       <tfoot>
+        <tr class="st-tr">
+          <td colspan="4" class="st-lbl">Subtotal</td>
+          <td class="st-val" id="stVal"><span class="cur-sym">$</span> 0.00</td>
+          <td class="no-print" style="background:transparent;border:none;"></td>
+        </tr>
+        <tr class="st-tr">
+          <td colspan="4" class="st-lbl">VAT (5%)</td>
+          <td class="st-val" id="vatVal"><span class="cur-sym">$</span> 0.00</td>
+          <td class="no-print" style="background:transparent;border:none;"></td>
+        </tr>
         <tr class="gt-tr">
           <td colspan="4" class="gt-lbl">Grand Total</td>
-          <td class="gt-val" id="gtVal"><span id="curSymDisplay">$</span> 0.00</td>
+          <td class="gt-val" id="gtVal"><span class="cur-sym">$</span> 0.00</td>
           <td class="no-print" style="background:transparent;border:none;"></td>
         </tr>
       </tfoot>
@@ -644,14 +661,20 @@
 
   /* ── Recalc Grand Total ── */
   function recalcTotal() {
-    let total = 0;
+    let subtotal = 0;
     document.querySelectorAll('.ai').forEach(inp => {
-      total += parseFloat(inp.value) || 0;
+      subtotal += parseFloat(inp.value) || 0;
     });
+    const vat = subtotal * 0.05;
+    const total = subtotal + vat;
+
     const sym = SYM[curCode] || curCode;
-    document.getElementById('curSymDisplay').textContent = sym;
+    document.getElementById('stVal').innerHTML =
+      `<span class="cur-sym">${sym}</span> ${fmtN(subtotal)}`;
+    document.getElementById('vatVal').innerHTML =
+      `<span class="cur-sym">${sym}</span> ${fmtN(vat)}`;
     document.getElementById('gtVal').innerHTML =
-      `<span id="curSymDisplay">${sym}</span> ${fmtN(total)}`;
+      `<span class="cur-sym">${sym}</span> ${fmtN(total)}`;
   }
 
   /* ── Format number ── */
