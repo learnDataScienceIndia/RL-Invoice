@@ -184,6 +184,40 @@
     .item-tbl tbody td.dtd{text-align:left;}
     .item-tbl tbody td.sr{font-size:11px;font-weight:600;color:var(--muted);width:34px;}
 
+    .expand-input {
+      width: 100%;
+      min-height: 22px;
+      padding: 3px 4px;
+      font-family: 'Inter', sans-serif;
+      font-size: 11.5px;
+      color: var(--text);
+      outline: none;
+      text-align: center;
+      word-wrap: break-word;
+      background: transparent;
+      border: 1px solid transparent;
+      transition: background 0.2s, border-radius 0.2s;
+    }
+    td.dtd .expand-input {
+      text-align: left;
+    }
+    .expand-input:focus {
+      background: rgba(10,127,63,.06);
+      border-radius: 3px;
+    }
+    [contenteditable][data-placeholder]:empty:before {
+      content: attr(data-placeholder);
+      color: #999;
+      pointer-events: none;
+    }
+
+    .rm-col-btn {
+      background: rgba(255,255,255,0.2); border: none; cursor: pointer;
+      color: #fff; font-size: 10px; padding: 2px 5px;
+      border-radius: 3px; transition: background .15s; margin-left: 5px;
+    }
+    .rm-col-btn:hover { background: rgba(255,0,0,0.6); }
+
     .item-tbl tbody td input{
       width:100%;border:none;background:transparent;
       text-align:center;font-family:'Inter',sans-serif;
@@ -334,6 +368,7 @@
       <option value="GBP">🇬🇧 GBP</option>
       <option value="INR">🇮🇳 INR</option>
     </select>
+    <button class="btn btn-add" onclick="addColumn()">＋ Add Column</button>
     <button class="btn btn-add" onclick="addRow()">＋ Add Row</button>
   </div>
   <button class="btn btn-print" onclick="window.print()">
@@ -422,8 +457,16 @@
         <tr>
           <th style="width:34px">Sr.No</th>
           <th class="dh">Description</th>
-          <th style="width:60px">Qty</th>
-          <th style="width:120px">Unit Price (<span id="curHdr">USD</span>)</th>
+          <th style="width:60px" id="th-qty">
+            <div style="display:flex; align-items:center; justify-content:center; gap:4px;">
+              Qty <button class="rm-col-btn no-print" onclick="removeCoreColumn('qty')" title="Remove Column">✕</button>
+            </div>
+          </th>
+          <th style="width:120px" id="th-price">
+            <div style="display:flex; align-items:center; justify-content:center; gap:4px;">
+              Unit Price (<span id="curHdr">USD</span>) <button class="rm-col-btn no-print" onclick="removeCoreColumn('price')" title="Remove Column">✕</button>
+            </div>
+          </th>
           <th style="width:120px">Total (<span id="curHdr2">USD</span>):</th>
           <th style="width:30px" class="no-print"></th>
         </tr>
@@ -431,17 +474,17 @@
       <tbody id="tbody"></tbody>
       <tfoot>
         <tr>
-          <td colspan="4" style="text-align:right; font-weight:700; padding:7px 12px; border:none; border-right:1px solid var(--border); font-size:12px;">Subtotal</td>
+          <td colspan="4" id="foot-subtotal" style="text-align:right; font-weight:700; padding:7px 12px; border:none; border-right:1px solid var(--border); font-size:12px;">Subtotal</td>
           <td id="subTotalVal" style="font-weight:700; text-align:center; border:none; padding:7px 12px; border-bottom:1px solid var(--border);"><span class="curSymDisplay">$</span> 0.00</td>
           <td class="no-print" style="border:none;"></td>
         </tr>
         <tr>
-          <td colspan="4" style="text-align:right; font-weight:700; padding:7px 12px; border:none; border-right:1px solid var(--border); font-size:12px;">VAT (5%)</td>
+          <td colspan="4" id="foot-vat" style="text-align:right; font-weight:700; padding:7px 12px; border:none; border-right:1px solid var(--border); font-size:12px;">VAT (5%)</td>
           <td id="vatVal" style="font-weight:700; text-align:center; border:none; padding:7px 12px;"><span class="curSymDisplay">$</span> 0.00</td>
           <td class="no-print" style="border:none;"></td>
         </tr>
         <tr class="gt-tr">
-          <td colspan="4" class="gt-lbl">Grand Total</td>
+          <td colspan="4" id="foot-gt" class="gt-lbl">Grand Total</td>
           <td class="gt-val" id="gtVal"><span id="curSymDisplay">$</span> 0.00</td>
           <td class="no-print" style="background:transparent;border:none;"></td>
         </tr>
@@ -452,6 +495,7 @@
 
   <!-- ══ ROW CONTROLS ══ -->
   <div class="row-ctrl no-print">
+    <button class="btn btn-add" onclick="addColumn()">＋ Add Column</button>
     <button class="btn btn-add" onclick="addRow()">＋ Add Row</button>
     <span class="row-cnt" id="rowCnt"></span>
   </div>
@@ -593,6 +637,8 @@
   /* ── State ── */
   let rowId   = 0;
   let curCode = 'USD';
+  let customCols = [];
+  let coreColsRemoved = { qty: false, price: false };
 
   const SYM = { AED:'AED', USD:'$', EUR:'€', GBP:'£', INR:'₹' };
 
@@ -604,17 +650,80 @@
     for (let i = 0; i < 8; i++) addRow();
   });
 
+  /* ── Add Column ── */
+  function addColumn() {
+    const colId = 'cc' + Date.now();
+    customCols.push(colId);
+    
+    // Add to Header
+    const theadTr = document.querySelector('#itemTbl thead tr');
+    const thQty = document.getElementById('th-qty');
+    const newTh = document.createElement('th');
+    newTh.className = `custom-col-${colId}`;
+    newTh.innerHTML = `<div style="display:flex; align-items:center; justify-content:center; gap:4px;"><div contenteditable="true" style="min-width:40px; border-bottom:1px dashed rgba(255,255,255,0.4);">Custom</div> <button class="rm-col-btn no-print" onclick="removeColumn('${colId}')" title="Remove Column">✕</button></div>`;
+    theadTr.insertBefore(newTh, thQty);
+    
+    // Add to each existing row
+    const rows = document.querySelectorAll('#tbody tr');
+    rows.forEach(tr => {
+      const tdQty = tr.querySelector('.td-qty');
+      const newTd = document.createElement('td');
+      newTd.className = `custom-col-${colId}`;
+      newTd.innerHTML = `<div class="expand-input" contenteditable="true" data-placeholder="-"></div>`;
+      tr.insertBefore(newTd, tdQty);
+    });
+    
+    updateFooters();
+  }
+
+  function removeColumn(colId) {
+    customCols = customCols.filter(id => id !== colId);
+    const elements = document.querySelectorAll(`.custom-col-${colId}`);
+    elements.forEach(el => el.remove());
+    updateFooters();
+  }
+
+  function removeCoreColumn(col) {
+    coreColsRemoved[col] = true;
+    if (col === 'qty') {
+      document.getElementById('th-qty').style.display = 'none';
+      document.querySelectorAll('.td-qty').forEach(el => el.style.display = 'none');
+    } else if (col === 'price') {
+      document.getElementById('th-price').style.display = 'none';
+      document.querySelectorAll('.td-price').forEach(el => el.style.display = 'none');
+    }
+    updateFooters();
+    recalcTotal();
+  }
+
+  function updateFooters() {
+    let baseColspan = 4;
+    if (coreColsRemoved.qty) baseColspan--;
+    if (coreColsRemoved.price) baseColspan--;
+    const newColspan = baseColspan + customCols.length;
+    document.getElementById('foot-subtotal').colSpan = newColspan;
+    document.getElementById('foot-vat').colSpan = newColspan;
+    document.getElementById('foot-gt').colSpan = newColspan;
+  }
+
   /* ── Add Row ── */
   function addRow() {
     rowId++;
     const id = rowId;
     const tr = document.createElement('tr');
     tr.id = `r${id}`;
+    
+    let customTdHtml = '';
+    customCols.forEach(colId => {
+      customTdHtml += `<td class="custom-col-${colId}"><div class="expand-input" contenteditable="true" data-placeholder="-"></div></td>`;
+    });
+
     tr.innerHTML = `
       <td class="sr" id="sr${id}">${document.querySelectorAll('#tbody tr').length + 1}</td>
-      <td class="dtd"><input type="text"   placeholder="Item description" id="d${id}"/></td>
-      <td><input type="number" min="0" step="any" placeholder="0"    id="q${id}" class="qi" inputmode="decimal"/></td>
-      <td><input type="number" min="0" step="any" placeholder="0.00" id="rt${id}" class="ri" inputmode="decimal"/></td>
+      <td class="dtd"><div class="expand-input" contenteditable="true" data-placeholder="Item description" id="d${id}"></div></td>
+      ${customTdHtml}
+      <td class="td-qty" style="${coreColsRemoved.qty ? 'display:none' : ''}"><input type="number" min="0" step="any" placeholder="0"    id="q${id}" class="qi" inputmode="decimal"/></td>
+      <td class="td-price" style="${coreColsRemoved.price ? 'display:none' : ''}"><input type="number" min="0" step="any" placeholder="0.00" id="rt${id}" class="ri" inputmode="decimal"/></td>
       <td><input type="number" min="0" step="any" placeholder="0.00" id="a${id}" class="ai amt-inp" inputmode="decimal"/></td>
       <td class="no-print"><button class="rm-btn" onclick="removeRow(${id})" title="Remove">✕</button></td>
     `;
@@ -625,12 +734,17 @@
     const ai = tr.querySelector('.ai');
 
     function qrChange() {
-      const q = parseFloat(qi.value) || 0;
-      const r = parseFloat(ri.value) || 0;
-      if (q > 0 && r > 0) {
-        ai.value = (q * r).toFixed(2);
-      } else if (q === 0 && r === 0) {
-        ai.value = '';
+      const rawQ = parseFloat(qi.value) || 0;
+      const rawR = parseFloat(ri.value) || 0;
+      const q = coreColsRemoved.qty ? 1 : rawQ;
+      const r = coreColsRemoved.price ? 1 : rawR;
+      
+      if (!coreColsRemoved.qty || !coreColsRemoved.price) {
+        if (q > 0 && r > 0) {
+          ai.value = (q * r).toFixed(2);
+        } else if (rawQ === 0 && rawR === 0) {
+          ai.value = '';
+        }
       }
       recalcTotal();
     }
