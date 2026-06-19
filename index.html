@@ -370,6 +370,10 @@
     </select>
     <button class="btn btn-add" onclick="addColumn()">＋ Add Column</button>
     <button class="btn btn-add" onclick="addRow()">＋ Add Row</button>
+    <label class="lbl" style="display:flex; align-items:center; gap:4px; cursor:pointer; margin-left:10px;">
+      <input type="checkbox" id="vatCheck" checked onchange="toggleVat()">
+      Apply VAT (5%)
+    </label>
   </div>
   <button class="btn btn-print" onclick="window.print()">
     <svg viewBox="0 0 24 24"><path d="M19 8H5c-1.66 0-3 1.34-3 3v6h4v4h12v-4h4v-6c0-1.66-1.34-3-3-3zm-3 11H8v-5h8v5zm3-7c-.55 0-1-.45-1-1s.45-1 1-1 1 .45 1 1-.45 1-1 1zm-1-9H6v4h12V3z"/></svg>
@@ -478,7 +482,7 @@
           <td id="subTotalVal" style="font-weight:700; text-align:center; border:none; padding:7px 12px; border-bottom:1px solid var(--border);"><span class="curSymDisplay">$</span> 0.00</td>
           <td class="no-print" style="border:none;"></td>
         </tr>
-        <tr>
+        <tr id="vatRow">
           <td colspan="4" id="foot-vat" style="text-align:right; font-weight:700; padding:7px 12px; border:none; border-right:1px solid var(--border); font-size:12px;">VAT (5%)</td>
           <td id="vatVal" style="font-weight:700; text-align:center; border:none; padding:7px 12px;"><span class="curSymDisplay">$</span> 0.00</td>
           <td class="no-print" style="border:none;"></td>
@@ -781,13 +785,26 @@
     document.querySelectorAll('.ai').forEach(inp => {
       subtotal += parseFloat(inp.value) || 0;
     });
-    const vat = subtotal * 0.05;
+    
+    const vatCheck = document.getElementById('vatCheck');
+    const applyVat = vatCheck ? vatCheck.checked : true;
+    const vat = applyVat ? subtotal * 0.05 : 0;
     const grandTotal = subtotal + vat;
     const sym = SYM[curCode] || curCode;
     
     document.getElementById('subTotalVal').innerHTML = `<span class="curSymDisplay">${sym}</span> ${fmtN(subtotal)}`;
     document.getElementById('vatVal').innerHTML = `<span class="curSymDisplay">${sym}</span> ${fmtN(vat)}`;
     document.getElementById('gtVal').innerHTML = `<span id="curSymDisplay">${sym}</span> ${fmtN(grandTotal)}`;
+    
+    const vatRow = document.getElementById('vatRow');
+    if (vatRow) {
+      vatRow.style.display = applyVat ? '' : 'none';
+    }
+  }
+
+  /* ── Toggle VAT ── */
+  function toggleVat() {
+    recalcTotal();
   }
 
   /* ── Format number ── */
