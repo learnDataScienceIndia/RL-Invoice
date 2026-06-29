@@ -329,9 +329,18 @@
       @page{size:A4 portrait;margin:7mm 9mm;}
       html,body{background:#fff !important;padding:0;margin:0;display:block;font-size:10px;}
       .toolbar,.row-ctrl,.rm-btn,.no-print{display:none !important;}
-      .po-wrap{max-width:100%;box-shadow:none;border-radius:0;}
+      
+      /* Make wrappers take full page height and use flex to push footer down */
+      .po-wrap{
+        max-width:100%;box-shadow:none;border-radius:0;
+        display: flex; flex-direction: column; min-height: 99vh;
+      }
+      .po-body{
+        padding:9px 13px 11px !important;
+        flex-grow: 1; /* Pushes bottom-section and footer to the bottom */
+      }
+
       *{-webkit-print-color-adjust:exact !important;print-color-adjust:exact !important;}
-      .po-body{padding:9px 13px 11px !important;}
       .po-meta-tbl td{padding:4px 8px !important;}
       .sh-tbl td{padding:4px 8px !important;}
       .item-tbl thead th{padding:5px 6px !important;}
@@ -347,8 +356,13 @@
         page-break-before:always;
         box-shadow:none;border-radius:0;
         margin-top:0;
+        display: flex; flex-direction: column; min-height: 99vh;
       }
-      .tc-inner{padding:18px 22px 16px;}
+      .tc-inner{
+        padding:18px 22px 16px;
+        flex-grow: 1; /* Pushes foot-strip to the bottom */
+      }
+      
       .item-tbl{page-break-inside:avoid;}
       .po-footer{page-break-inside:avoid;}
       .pay-section{page-break-inside:avoid;}
