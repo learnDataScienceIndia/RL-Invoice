@@ -372,6 +372,7 @@
 <body>
 
 <!-- ══════════ TOOLBAR ══════════ -->
+<input type="file" id="loadJsonFile" accept=".json" style="display:none;" onchange="loadFromJson(event)">
 <div class="toolbar no-print" id="toolbar">
   <div class="toolbar-left">
     <span class="lbl">Currency:</span>
@@ -384,6 +385,8 @@
     </select>
     <button class="btn btn-add" onclick="addColumn()">＋ Add Column</button>
     <button class="btn btn-add" onclick="addRow()">＋ Add Row</button>
+    <button class="btn btn-add" onclick="triggerLoad()" title="Load from JSON">📂 Load</button>
+    <button class="btn btn-add" onclick="saveToJson()" title="Save to JSON">💾 Save</button>
     <label class="lbl" style="display:flex; align-items:center; gap:4px; cursor:pointer; margin-left:10px;">
       <input type="checkbox" id="vatCheck" checked onchange="toggleVat()">
       Apply VAT (5%)
@@ -670,7 +673,7 @@
 
   /* ── Add Column ── */
   function addColumn() {
-    const colId = 'cc' + Date.now();
+    const colId = 'cc' + Date.now() + Math.floor(Math.random() * 10000);
     customCols.push(colId);
     
     // Add to Header
@@ -839,6 +842,180 @@
   function updateRowCount() {
     const c = document.querySelectorAll('#tbody tr').length;
     document.getElementById('rowCnt').textContent = `${c} row${c!==1?'s':''}`;
+  }
+
+  /* ── Save to JSON ── */
+  function saveToJson() {
+    const data = {
+      curCode: document.getElementById('curSel').value,
+      applyVat: document.getElementById('vatCheck').checked,
+      coName: document.getElementById('coName').innerHTML,
+      coTrn: document.getElementById('coTrn').innerHTML,
+      touchLbl: document.getElementById('touchLbl').innerHTML,
+      coEmail: document.getElementById('coEmail').innerHTML,
+      coPhone: document.getElementById('coPhone').innerHTML,
+      coAddr: document.getElementById('coAddr').innerHTML,
+      invNo: document.getElementById('invNo').value,
+      invDate: document.getElementById('invDate').value,
+      billCoName: document.getElementById('billCoName').value,
+      billTrn: document.getElementById('billTrn').value,
+      billAddr: document.getElementById('billAddr').value,
+      billName: document.getElementById('billName').value,
+      billPhone: document.getElementById('billPhone').value,
+      billEmail: document.getElementById('billEmail').value,
+      coreColsRemoved: coreColsRemoved,
+      customCols: [],
+      items: [],
+      payTerms: document.getElementById('payTerms').value,
+      bankName: document.getElementById('bankName').value,
+      accName: document.getElementById('accName').value,
+      accNum: document.getElementById('accNum').value,
+      ibanNum: document.getElementById('ibanNum').value,
+      sigLineLbl: document.querySelector('.sig-line-lbl').innerHTML,
+    };
+
+    customCols.forEach(colId => {
+      const th = document.querySelector(`th.custom-col-${colId} div[contenteditable]`);
+      data.customCols.push({
+        id: colId,
+        name: th ? th.innerHTML : 'Custom'
+      });
+    });
+
+    const rows = document.querySelectorAll('#tbody tr');
+    rows.forEach(tr => {
+      const item = {
+        desc: tr.querySelector('.dtd .expand-input').innerHTML,
+        qty: tr.querySelector('.qi').value,
+        price: tr.querySelector('.ri').value,
+        customValues: {}
+      };
+      data.customCols.forEach(col => {
+        const tdDiv = tr.querySelector(`td.custom-col-${col.id} .expand-input`);
+        item.customValues[col.id] = tdDiv ? tdDiv.innerHTML : '';
+      });
+      data.items.push(item);
+    });
+
+    const jsonStr = JSON.stringify(data, null, 2);
+    const blob = new Blob([jsonStr], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `Invoice_${data.invNo || 'Draft'}.json`.replace(/[\\/]/g, '-');
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  }
+
+  /* ── Load from JSON ── */
+  function triggerLoad() {
+    document.getElementById('loadJsonFile').click();
+  }
+
+  function loadFromJson(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = function(e) {
+      try {
+        const data = JSON.parse(e.target.result);
+        applyLoadedData(data);
+      } catch (err) {
+        alert('Error loading JSON file');
+        console.error(err);
+      }
+      event.target.value = '';
+    };
+    reader.readAsText(file);
+  }
+
+  function applyLoadedData(data) {
+    if (data.curCode) document.getElementById('curSel').value = data.curCode;
+    if (data.applyVat !== undefined) document.getElementById('vatCheck').checked = data.applyVat;
+    
+    if (data.coName !== undefined) document.getElementById('coName').innerHTML = data.coName;
+    if (data.coTrn !== undefined) document.getElementById('coTrn').innerHTML = data.coTrn;
+    if (data.touchLbl !== undefined) document.getElementById('touchLbl').innerHTML = data.touchLbl;
+    if (data.coEmail !== undefined) document.getElementById('coEmail').innerHTML = data.coEmail;
+    if (data.coPhone !== undefined) document.getElementById('coPhone').innerHTML = data.coPhone;
+    if (data.coAddr !== undefined) document.getElementById('coAddr').innerHTML = data.coAddr;
+    
+    if (data.invNo !== undefined) document.getElementById('invNo').value = data.invNo;
+    if (data.invDate !== undefined) document.getElementById('invDate').value = data.invDate;
+    
+    if (data.billCoName !== undefined) document.getElementById('billCoName').value = data.billCoName;
+    if (data.billTrn !== undefined) document.getElementById('billTrn').value = data.billTrn;
+    if (data.billAddr !== undefined) document.getElementById('billAddr').value = data.billAddr;
+    if (data.billName !== undefined) document.getElementById('billName').value = data.billName;
+    if (data.billPhone !== undefined) document.getElementById('billPhone').value = data.billPhone;
+    if (data.billEmail !== undefined) document.getElementById('billEmail').value = data.billEmail;
+    
+    if (data.payTerms !== undefined) document.getElementById('payTerms').value = data.payTerms;
+    if (data.bankName !== undefined) document.getElementById('bankName').value = data.bankName;
+    if (data.accName !== undefined) document.getElementById('accName').value = data.accName;
+    if (data.accNum !== undefined) document.getElementById('accNum').value = data.accNum;
+    if (data.ibanNum !== undefined) document.getElementById('ibanNum').value = data.ibanNum;
+    
+    if (data.sigLineLbl !== undefined) {
+      const sigLine = document.querySelector('.sig-line-lbl');
+      if (sigLine) sigLine.innerHTML = data.sigLineLbl;
+    }
+
+    customCols.slice().forEach(colId => removeColumn(colId));
+    
+    coreColsRemoved = data.coreColsRemoved || { qty: false, price: false };
+    document.getElementById('th-qty').style.display = coreColsRemoved.qty ? 'none' : '';
+    document.getElementById('th-price').style.display = coreColsRemoved.price ? 'none' : '';
+
+    document.getElementById('tbody').innerHTML = '';
+    rowId = 0;
+
+    if (data.customCols) {
+      data.customCols.forEach(col => {
+        addColumn();
+        const newColId = customCols[customCols.length - 1];
+        const th = document.querySelector(`th.custom-col-${newColId} div[contenteditable]`);
+        if (th) th.innerHTML = col.name;
+        col.newId = newColId;
+      });
+    }
+
+    if (data.items && data.items.length > 0) {
+      data.items.forEach(item => {
+        addRow();
+        const tr = document.getElementById(`r${rowId}`);
+        if (item.desc !== undefined) tr.querySelector('.dtd .expand-input').innerHTML = item.desc;
+        if (item.qty !== undefined) {
+            const qi = tr.querySelector('.qi');
+            qi.value = item.qty;
+        }
+        if (item.price !== undefined) {
+            const ri = tr.querySelector('.ri');
+            ri.value = item.price;
+        }
+        
+        if (data.customCols && item.customValues) {
+          data.customCols.forEach(col => {
+            if (item.customValues[col.id] !== undefined) {
+              const tdDiv = tr.querySelector(`td.custom-col-${col.newId} .expand-input`);
+              if (tdDiv) tdDiv.innerHTML = item.customValues[col.id];
+            }
+          });
+        }
+        
+        // Trigger calculation for the row
+        const qi = tr.querySelector('.qi');
+        if (qi) qi.dispatchEvent(new Event('input'));
+      });
+    } else {
+      for (let i = 0; i < 8; i++) addRow();
+    }
+
+    applyCurrency();
+    updateFooters();
+    recalcTotal();
   }
 </script>
 
